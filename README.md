@@ -10,7 +10,7 @@
 
 ### Team Members
 - Team Lead: Alan Riju
-- Member 2: Albert Anil
+- Member : Albert Anil
 
 
 ### Project Description
