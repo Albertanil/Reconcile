@@ -134,8 +134,8 @@ Landing ──> Get Queue No. ──> Waiting Room ──> Form Submission ─�
 ---
 
 ## Team Contributions
-- **Alan Riju (Team Lead):** [TODO: Add specific contributions]
-- **Albert Anil:** [TODO: Add specific contributions]
+- **Alan Riju (Team Lead):** [Frontend]
+- **Albert Anil:** [Backend]
 
 ---
 
