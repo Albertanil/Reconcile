@@ -1,7 +1,9 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import PageChrome from '../components/PageChrome'
 import type { Navigate } from '../App'
 import { GovernmentSeal } from './Landing'
+import { useApplication } from '@/context/ApplicationContext'
+import type { ApologyData } from '@backend/types/application'
 
 interface InlineWarning {
   text: string
@@ -9,13 +11,19 @@ interface InlineWarning {
 }
 
 export default function Form({ navigate }: { navigate: Navigate }) {
-  const [what, setWhat] = useState('I forgot to reply to your message')
-  const [when, setWhen] = useState('eventually')
-  const [understood, setUnderstood] = useState('')
-  const [responsible, setResponsible] = useState(50)
+  const { draftApology, updateDraft, saveDraft, ticketNumber } = useApplication()
+
+  const d = draftApology as any
+  const [what, setWhat] = useState(d.incident || d.offense || '')
+  const [recipientName, setRecipientName] = useState(d.recipient || d.recipientName || '')
+  const [recipientPhone, setRecipientPhone] = useState(d.recipientPhone || d.phone || '')
+  const [when, setWhen] = useState(d.realization || 'eventually')
+  const [understood, setUnderstood] = useState(d.impact || d.understoodImpact || '')
+  const [responsible, setResponsible] = useState(d.remorseLevel ?? 50)
   const [responsibleDirty, setResponsibleDirty] = useState(false)
-  const [circumstances, setCircumstances] = useState('')
-  const [justified, setJustified] = useState('')
+  const [circumstances, setCircumstances] = useState(d.whatHappened || d.circumstances || '')
+  const [justified, setJustified] = useState(d.regret || d.justified || '')
+  const [preventionCommitment, setPreventionCommitment] = useState(d.prevention || d.preventionCommitment || '')
 
   // Inline warnings per field
   const [whenWarn, setWhenWarn] = useState<InlineWarning | null>(null)
@@ -62,7 +70,24 @@ export default function Form({ navigate }: { navigate: Navigate }) {
     }
   }
 
-  const canProceed = what.length > 5 && when && understood
+  const canProceed = what.length > 3 && when && understood
+
+  const handleSubmit = async () => {
+    if (!canProceed) return
+    const fields: Partial<ApologyData> = {
+      recipient: recipientName,
+      recipientPhone: recipientPhone,
+      incident: what,
+      whatHappened: circumstances,
+      responsibility: `${responsible}%`,
+      impact: understood,
+      regret: justified,
+      prevention: preventionCommitment,
+    }
+    updateDraft(fields)
+    await saveDraft(fields)
+    navigate('submission')
+  }
 
   return (
     <PageChrome step={3}>
@@ -105,6 +130,29 @@ export default function Form({ navigate }: { navigate: Navigate }) {
 
           {/* Section 1 — Incident Details */}
           <PaperSection num="1." title="INCIDENT DETAILS">
+            <PaperFieldLabel label="Recipient Designation (Who is this apology intended for?)" />
+            <input
+              type="text"
+              className="gov-input-paper"
+              value={recipientName}
+              onChange={(e) => setRecipientName(e.target.value)}
+              placeholder="e.g. Alex / Supervisor / Roommate"
+              style={{ marginBottom: '20px' }}
+            />
+
+            <PaperFieldLabel label="RECIPIENT PHONE NUMBER" />
+            <div className="text-xs mb-1" style={{ fontFamily: 'var(--f-mono)', color: '#7a6840' }}>
+              Required for interdepartmental apology transmission. Include country code (e.g. +919876543210).
+            </div>
+            <input
+              type="tel"
+              className="gov-input-paper"
+              value={recipientPhone}
+              onChange={(e) => setRecipientPhone(e.target.value)}
+              placeholder="+919876543210"
+              style={{ marginBottom: '20px' }}
+            />
+
             <PaperFieldLabel label="What did you do?" />
             <input
               type="text"
@@ -230,6 +278,17 @@ export default function Form({ navigate }: { navigate: Navigate }) {
               </div>
               {justWarn && <InlineWarn warn={justWarn} />}
             </div>
+
+            <div className="mt-4">
+              <PaperFieldLabel label="Prevention Commitment (What specific action will you take to prevent recurrence?)" />
+              <textarea
+                className="gov-textarea-paper"
+                rows={2}
+                value={preventionCommitment}
+                onChange={(e) => setPreventionCommitment(e.target.value)}
+                placeholder="e.g. Set 3 alarms, turn off phone notifications during work, etc."
+              />
+            </div>
           </PaperSection>
 
           {/* Continue button */}
@@ -241,7 +300,7 @@ export default function Form({ navigate }: { navigate: Navigate }) {
               Fields 1–9 of 47. Supplemental forms available on request.
             </div>
             <button
-              onClick={() => canProceed && navigate('submission')}
+              onClick={handleSubmit}
               disabled={!canProceed}
               className="px-8 py-3 text-xs tracking-[0.15em] border transition-all"
               style={{
@@ -280,7 +339,7 @@ export default function Form({ navigate }: { navigate: Navigate }) {
           >
             <div className="flex justify-between">
               <span style={{ color: 'var(--c-muted)' }}>CASE:</span>
-              <span style={{ color: 'var(--c-text)' }}>A-047</span>
+              <span style={{ color: 'var(--c-text)' }}>{ticketNumber}</span>
             </div>
             <div className="flex justify-between">
               <span style={{ color: 'var(--c-muted)' }}>FIELDS DONE:</span>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import PageChrome from '../components/PageChrome'
 import type { Navigate } from '../App'
+import { useApplication } from '@/context/ApplicationContext'
 
 interface Message {
   id: number
@@ -48,6 +49,9 @@ function detectFlag(text: string): string | null {
 }
 
 export default function Clerk({ navigate }: { navigate: Navigate }) {
+  const { ticketNumber, triggerEvaluation, loading: contextLoading } = useApplication()
+  const [evaluating, setEvaluating] = useState(false)
+  const [evalError, setEvalError] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [sysWarns, setSysWarns] = useState<SysWarn[]>([])
   const [input, setInput] = useState('')
@@ -131,7 +135,7 @@ export default function Clerk({ navigate }: { navigate: Navigate }) {
         setTyping(false)
         addClerk('This interview is now complete. Your responses have been logged and transmitted to the Bureau of Remorse Assessment. Do not speak further.')
         setTimeout(() => {
-          addClerk('CASE A-047 INTERVIEW: CONCLUDED. Processing remorse indicators...')
+          addClerk(`CASE ${ticketNumber} INTERVIEW: CONCLUDED. Processing remorse indicators...`)
           setDone(true)
           setMood('PROCESSING')
           scroll()
@@ -148,7 +152,7 @@ export default function Clerk({ navigate }: { navigate: Navigate }) {
           className="flex-shrink-0 relative overflow-hidden"
           style={{ width: '280px', background: '#0a0906' }}
         >
-          <ClerkScene mood={mood} qIndex={qIndex} totalQ={QUESTIONS.length} load={load} done={done} />
+          <ClerkScene mood={mood} qIndex={qIndex} totalQ={QUESTIONS.length} load={load} done={done} ticketNumber={ticketNumber} />
         </div>
 
         {/* RIGHT — Conversation terminal */}
@@ -164,7 +168,7 @@ export default function Clerk({ navigate }: { navigate: Navigate }) {
             }}
           >
             <div style={{ color: 'var(--c-text)', letterSpacing: '0.15em' }}>
-              CASE A-047 — APOLOGY VERIFICATION INTERVIEW
+              CASE {ticketNumber} — APOLOGY VERIFICATION INTERVIEW
             </div>
             <div style={{ color: 'var(--c-muted)' }}>
               Q {Math.min(qIndex + 1, QUESTIONS.length)} / {QUESTIONS.length}
@@ -240,23 +244,43 @@ export default function Clerk({ navigate }: { navigate: Navigate }) {
           {/* Input */}
           <div className="border-t p-4 flex-shrink-0" style={{ background: 'var(--c-panel)', borderColor: 'var(--c-border)' }}>
             {done ? (
-              <div className="flex items-center justify-between">
-                <div className="text-sm" style={{ fontFamily: 'var(--f-mono)', color: 'var(--c-muted)' }}>
-                  INTERVIEW CONCLUDED — NO FURTHER RESPONSES ACCEPTED
+              <div className="flex flex-col gap-2 w-full">
+                {evalError && (
+                  <div className="text-xs p-2 border" style={{ color: 'var(--c-red2)', borderColor: 'var(--c-red2)', fontFamily: 'var(--f-mono)' }}>
+                    ⚠ EVALUATION ERROR: {evalError}
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <div className="text-sm" style={{ fontFamily: 'var(--f-mono)', color: 'var(--c-muted)' }}>
+                    INTERVIEW CONCLUDED — NO FURTHER RESPONSES ACCEPTED
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (evaluating || contextLoading) return
+                      setEvaluating(true)
+                      setEvalError(null)
+                      try {
+                        await triggerEvaluation()
+                        navigate('evaluation')
+                      } catch (err: any) {
+                        setEvaluating(false)
+                        setEvalError(err.message || 'Evaluation failed. Please try again.')
+                      }
+                    }}
+                    disabled={evaluating || contextLoading}
+                    className="px-8 py-2.5 text-xs tracking-[0.15em] border transition-all flex items-center gap-2"
+                    style={{
+                      fontFamily: 'var(--f-mono)',
+                      borderColor: 'var(--c-green2)',
+                      color: 'var(--c-green2)',
+                      background: 'rgba(42,122,56,0.08)',
+                      cursor: evaluating || contextLoading ? 'wait' : 'pointer',
+                      opacity: evaluating || contextLoading ? 0.7 : 1,
+                    }}
+                  >
+                    {evaluating || contextLoading ? 'RUNNING AI EVALUATION...' : 'VIEW EVALUATION →'}
+                  </button>
                 </div>
-                <button
-                  onClick={() => navigate('evaluation')}
-                  className="px-8 py-2.5 text-xs tracking-[0.15em] border transition-all"
-                  style={{
-                    fontFamily: 'var(--f-mono)',
-                    borderColor: 'var(--c-green2)',
-                    color: 'var(--c-green2)',
-                    background: 'rgba(42,122,56,0.08)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  VIEW EVALUATION →
-                </button>
               </div>
             ) : (
               <div className="flex gap-3 items-end">
@@ -297,7 +321,7 @@ export default function Clerk({ navigate }: { navigate: Navigate }) {
   )
 }
 
-function ClerkScene({ mood, qIndex, totalQ, load, done }: { mood: string; qIndex: number; totalQ: number; load: number; done: boolean }) {
+function ClerkScene({ mood, qIndex, totalQ, load, done, ticketNumber }: { mood: string; qIndex: number; totalQ: number; load: number; done: boolean; ticketNumber?: string }) {
   return (
     <svg width="280" height="100%" viewBox="0 0 280 580" preserveAspectRatio="xMidYMid meet" style={{ display: 'block', position: 'absolute', inset: 0, height: '100%' }}>
       {/* Room bg */}
@@ -336,7 +360,7 @@ function ClerkScene({ mood, qIndex, totalQ, load, done }: { mood: string; qIndex
       <rect x="175" y="278" width="60" height="50" fill="#0c0e0c" stroke="#141814" strokeWidth="1" />
       <rect x="177" y="280" width="56" height="44" fill="#0e140e" />
       <rect x="177" y="280" width="56" height="44" fill="#2e6030" opacity="0.15" />
-      <text x="205" y="298" textAnchor="middle" style={{ fontFamily: 'Courier Prime, monospace', fontSize: '6px', fill: '#3a6a3c' }}>CASE A-047</text>
+      <text x="205" y="298" textAnchor="middle" style={{ fontFamily: 'Courier Prime, monospace', fontSize: '6px', fill: '#3a6a3c' }}>CASE {ticketNumber || 'A-001'}</text>
       <text x="205" y="310" textAnchor="middle" style={{ fontFamily: 'Courier Prime, monospace', fontSize: '5px', fill: '#2a5a2c' }}>PROCESSING</text>
       <rect x="198" y="328" width="14" height="4" fill="#0e0e0e" />
       <rect x="186" y="332" width="38" height="4" fill="#141414" />

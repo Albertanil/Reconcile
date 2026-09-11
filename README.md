@@ -22,7 +22,7 @@ When a user simply wants to say "I'm sorry", our system responds: *"Please submi
 In modern society, individuals are able to issue apologies far too easily, without any official government oversight or administrative verification of remorse. Unregulated "I'm sorry" statements are dispatched daily without standardized sincerity checks, resulting in an alarming deficit of bureaucratic friction.
 
 ### The Solution (that nobody asked for)
-Reconcile introduces an unnecessarily complex Apology Verification Department. The applicant must complete forms, survive administrative waiting, undergo interrogation by an AI Clerk, receive an **AI-estimated remorse score**, and obtain official authorization before their apology can be dispatched to the recipient via WhatsApp.
+Reconcile introduces an unnecessarily complex Apology Verification Department. The applicant must complete forms, survive administrative waiting, undergo interrogation by an AI Clerk, receive an **AI-estimated remorse score**, and obtain official authorization before their apology can be dispatched to the recipient via an official simulated recipient notification (with optional server-side Twilio integration).
 
 ---
 
@@ -42,49 +42,59 @@ The system evaluates observable linguistic indicators including:
 
 ## Current Implementation Status
 
-*Current Milestone:* **Backend MVP Complete — Frontend Integration Pending**
+*Current Milestone:* **Full-Stack Application Complete — Demo Ready**
 
 | Module | Status | Description |
 | :--- | :--- | :--- |
 | **Repository & Docs** | ✅ Complete | Project structure, clean architecture, and documentation |
 | **Application/Session** | ✅ Complete | In-memory application creation, sequential ticket generation (`A-001`), and retrieval |
 | **Backend State Machine** | ✅ Complete | Controlled application lifecycle with enforced state transitions |
-| **Apology Application** | ✅ Complete | 7-field apology data model, required field validation, and post-submission edit protection |
+| **Apology Application** | ✅ Complete | 7-field apology data model including recipient phone number, validation, and edit protection |
 | **AI Clerk Engine** | ✅ Complete | AI Clerk service abstraction (`AIClerk`) with real Gemini provider (`gemini-3.6-flash`) |
 | **Remorse Evaluator** | ✅ Complete | Structured JSON output parsing (`remorseScore`, `responsibility`, `impactAcknowledgment`, `regretIndicators`, `deflection`, `summary`) |
 | **Backend Evaluation** | ✅ Complete | Deterministic approval/rejection decision rule (`remorseScore >= 70 → APPROVED`) |
-| **WhatsApp Dispatch** | ⏳ Planned | Twilio WhatsApp API integration |
-| **Frontend UI** | ⏳ In Progress / Planned | Next.js/React user interface |
-| **3D Waiting Room UI** | ⏳ Planned | Frontend Three.js / React Three Fiber (R3F) experience |
+| **Frontend Integration** | ✅ Complete | Unified Next.js React UI connected to backend API routes |
+| **Approved / Rejected Flow** | ✅ Complete | End-to-end user journey with official certificates and denial notices |
+| **Recipient Simulation** | ✅ Complete | Dynamic simulated recipient notification receipt displaying real application state |
+| **Production Build** | ✅ Complete | Production build (`npm run build`) verified with zero errors |
+| **WhatsApp Dispatch** | 🟡 Optional | Server-side Twilio integration present; simulated notification used for hackathon demo |
 
 ---
 
 ## Verification Status
 
-The backend implementation has been fully verified end-to-end:
+The current full-stack implementation has been verified through the following checks:
 
 * **TypeScript Compilation:** PASSED (`npx tsc --noEmit` — 0 errors)
-* **Production Build:** PASSED (`npm run build`)
-* **Automated Test Suites:** PASSED (5/5 test suites, 87 total assertions passed)
+* **Production Build:** PASSED (`npm run build` — verified static page generation)
 * **Live Gemini API Integration:** PASSED (tested with real `gemini-3.6-flash` model via `@google/genai`)
-* **Live HTTP REST API Suite:** PASSED (20 passed, 0 failed against live Next.js server)
-* **Security Check:** PASSED (`.env` ignored in `.gitignore`, `.env.example` placeholder only, 0 exposed keys)
+* **Browser End-to-End Testing:** PASSED (verified complete flow for both APPROVED and REJECTED applications)
+* **Simulated Recipient Notification:** PASSED (dynamic rendering of sender, recipient, phone, score, and message)
+* **Security Check:** PASSED (`.env.local` ignored in `.gitignore`, `.env.example` placeholder only, 0 exposed keys)
 
 ---
 
 ## Current Backend Flow
 
 ```text
-1. Applicant creates an application.
-2. System assigns a queue/application number (e.g., A-001).
-3. Applicant fills out the 7 required apology information fields.
-4. Backend validates required fields and submits the apology (status: FORM_SUBMITTED).
-5. AI Clerk sends the apology to Gemini for evaluation (model: gemini-3.6-flash).
-6. Gemini returns a structured assessment (remorseScore 0-100, categorical indicators, summary).
-7. Backend validates the AI result schema and range.
-8. Backend applies the approval threshold (score >= 70 → APPROVED, score < 70 → REJECTED).
-9. State machine transitions the application to APPROVED or REJECTED state.
+Landing Screen
+  └──> Obtain Ticket Number (e.g., A-001)
+         └──> Waiting Room
+                └──> Form 7-B (Apology Application & Recipient Phone)
+                       └──> Statement of Genuine Remorse
+                              └──> AI Clerk Interrogation (AO-7741)
+                                     └──> Gemini Evaluation (gemini-3.6-flash)
+                                            ├──> APPROVED (score >= 70)
+                                            │      └──> Certificate
+                                            │             └──> Send Apology
+                                            │                    └──> Simulated Recipient Notification
+                                            │
+                                            └──> REJECTED (score < 70)
+                                                   └──> Application Denied Notice
 ```
+
+> [!NOTE]
+> **Simulated Recipient Notification:** For hackathon demonstration reliability, Reconcile displays an official simulated recipient receipt displaying real application state data (Sender, Recipient, Phone, Score, Statement, and Transmission Status). An optional server-side Twilio WhatsApp dispatch integration is present for real messaging use.
 
 ---
 
@@ -96,6 +106,7 @@ The backend implementation has been fully verified end-to-end:
 | `/api/application` | `GET` | Retrieve application details | Query params: `?id=...` or `?ticketNumber=...` |
 | `/api/application` | `PATCH` | Update apology data, submit, or transition status | `{ "id": "...", "action": "update"|"submit"|"status", "apology"?: { ... } }` |
 | `/api/application/[id]/evaluate` | `POST` | Trigger AI Clerk evaluation for submitted apology | Path param: `id` |
+| `/api/application/[id]/dispatch` | `POST` | Trigger apology dispatch & state transition | Path param: `id` |
 
 ---
 
@@ -103,17 +114,16 @@ The backend implementation has been fully verified end-to-end:
 
 ### Technologies / Components Used
 
-#### Frontend (Planned / In Progress)
-- **Framework:** Next.js, React
+#### Frontend
+- **Framework:** Next.js 14 App Router, React
 - **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **3D Graphics:** Three.js, React Three Fiber (R3F)
+- **Styling:** Tailwind CSS, Custom CSS (Retro CRT Bureaucratic Interface Aesthetic)
 
-#### Backend (Implemented)
+#### Backend
 - **Runtime & API:** Next.js API Routes / Node.js
 - **Language:** TypeScript
 - **AI Intelligence:** Gemini API (`@google/genai` — model `gemini-3.6-flash`)
-- **Messaging Dispatch:** Twilio API (WhatsApp — Planned)
+- **Messaging Dispatch:** Simulated Recipient Notification (Optional server-side Twilio WhatsApp integration present)
 
 ---
 
@@ -159,6 +169,9 @@ The backend implementation has been fully verified end-to-end:
                      │
                      ▼
              APPROVED / REJECTED
+                     │
+                     ▼
+      Simulated Recipient Notification
 ```
 
 ---
@@ -179,6 +192,8 @@ cp .env.example .env.local
 npm run dev
 ```
 
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
 ---
 
 ## Development Philosophy
@@ -196,7 +211,7 @@ We prioritize a complete, polished, and hilarious interaction over unnecessary b
 
 ### Diagrams
 ```text
-Landing ──> Get Queue No. ──> Waiting Room ──> Apology Form ──> Submit ──> AI Clerk ──> Remorse Evaluation ──> Dispatch Authorization ──> WhatsApp Recipient
+Landing ──> Get Queue No. ──> Waiting Room ──> Apology Form ──> Submit ──> AI Clerk ──> Remorse Evaluation ──> Dispatch Authorization ──> Simulated Recipient Notification
 ```
 *User Journey Workflow (Full Product Vision)*
 
@@ -214,8 +229,9 @@ Landing ──> Get Queue No. ──> Waiting Room ──> Apology Form ──> 
 ---
 
 ## Team Contributions
-- **Alan Riju (Team Lead):** [Frontend]
-- **Albert Anil:** [Backend]
+- **Alan Riju (Team Lead):** Frontend development, UI/UX, waiting-room experience,
+application screens, frontend/backend integration
+- **Albert Anil:** Backend architecture, state machine, API design, Gemini integration, evaluation system, notification architecture, full-stack integration and testing
 
 ---
 

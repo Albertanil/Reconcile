@@ -24,7 +24,7 @@ export default function App() {
         className="fixed inset-0 pointer-events-none z-50"
         style={{
           backgroundImage:
-            'repeating-linear-gradient(0deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 4px)',
+            'repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px)',
         }}
       />
       {/* Vignette */}
@@ -32,7 +32,7 @@ export default function App() {
         className="fixed inset-0 pointer-events-none z-40"
         style={{
           background:
-            'radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,0.5) 100%)',
+            'radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(0,0,0,0.35) 100%)',
         }}
       />
 

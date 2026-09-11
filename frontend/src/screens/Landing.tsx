@@ -1,9 +1,20 @@
 import { useState } from 'react'
 import PageChrome from '../components/PageChrome'
 import type { Navigate } from '../App'
+import { useApplication } from '@/context/ApplicationContext'
 
 export default function Landing({ navigate }: { navigate: Navigate }) {
   const [hovered, setHovered] = useState(false)
+  const { startApplication, loading, ticketNumber, error } = useApplication()
+
+  const handleStart = async () => {
+    try {
+      await startApplication()
+      navigate('queue')
+    } catch {
+      // If error occurs, error state is set in context
+    }
+  }
 
   return (
     <PageChrome step={0}>
@@ -32,8 +43,7 @@ export default function Landing({ navigate }: { navigate: Navigate }) {
               letterSpacing: '0.04em',
             }}
           >
-            <span style={{ color: 'var(--c-text)' }}>SORRY,&nbsp;</span>
-            <span style={{ color: 'var(--c-red2)' }}>PENDING</span>
+            <span style={{ color: 'var(--c-text)' }}>RECONCILE</span>
           </div>
         </div>
 
@@ -53,7 +63,8 @@ export default function Landing({ navigate }: { navigate: Navigate }) {
 
         {/* CTA Button */}
         <button
-          onClick={() => navigate('queue')}
+          onClick={handleStart}
+          disabled={loading}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
           className="px-12 py-4 text-sm tracking-[0.2em] border-2 transition-all duration-150"
@@ -62,12 +73,19 @@ export default function Landing({ navigate }: { navigate: Navigate }) {
             background: hovered ? 'var(--c-text)' : 'transparent',
             color: hovered ? 'var(--c-bg)' : 'var(--c-text)',
             borderColor: 'var(--c-text)',
-            cursor: 'pointer',
+            cursor: loading ? 'wait' : 'pointer',
             letterSpacing: '0.2em',
+            opacity: loading ? 0.6 : 1,
           }}
         >
-          BEGIN APPLICATION →
+          {loading ? 'INITIALIZING SESSION...' : 'BEGIN APPLICATION →'}
         </button>
+
+        {error && (
+          <div className="mt-4 text-xs" style={{ color: 'var(--c-red2)', fontFamily: 'var(--f-mono)' }}>
+            [ERROR: {error}]
+          </div>
+        )}
 
         {/* Spacer */}
         <div style={{ height: '48px' }} />
@@ -121,7 +139,7 @@ export default function Landing({ navigate }: { navigate: Navigate }) {
         >
           <span>FORM 7-B REV.14</span>
           <span style={{ color: 'var(--c-border2)' }}>|</span>
-          <span>CASE A-047</span>
+          <span>CASE {ticketNumber}</span>
           <span style={{ color: 'var(--c-border2)' }}>|</span>
           <span>SYS VER 4.7</span>
         </div>

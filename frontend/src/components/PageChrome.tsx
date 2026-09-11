@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useApplication } from '@/context/ApplicationContext'
 
 const STEPS = [
   'REGISTRATION',
@@ -16,6 +17,8 @@ interface Props {
 }
 
 export default function PageChrome({ step = 0, children }: Props) {
+  const { ticketNumber } = useApplication()
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top header */}
@@ -43,7 +46,7 @@ export default function PageChrome({ step = 0, children }: Props) {
         <div className="flex items-center gap-5">
           <span>
             CASE:{' '}
-            <span style={{ color: 'var(--c-amber)' }}>A-047</span>
+            <span style={{ color: 'var(--c-amber)' }}>{ticketNumber}</span>
           </span>
           <span style={{ color: 'var(--c-border2)' }}>|</span>
           <span>FORM 7-B</span>

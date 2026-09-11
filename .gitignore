@@ -36,3 +36,17 @@ yarn-error.log*
 # TypeScript Incremental Build Cache
 *.tsbuildinfo
 next-env.d.ts
+
+# Local Demo & Testing Artifacts
+demo/
+videos/
+recordings/
+tmp_*_frames/
+DEMO_SCRIPT.md
+demo-script.md
+demo_script.md
+*.mp4
+*.webm
+README(1).md
+README(2).md
+

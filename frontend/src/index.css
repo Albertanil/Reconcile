@@ -15,22 +15,22 @@ body,
 }
 
 :root {
-  --c-bg: #0c0c0a;
-  --c-panel: #141412;
-  --c-panel2: #1c1c19;
-  --c-text: #dcd7c2;
-  --c-muted: #545048;
-  --c-muted2: #3a3832;
-  --c-paper: #ede7d0;
-  --c-paper2: #d8d1bb;
-  --c-border: #242420;
-  --c-border2: #32312c;
-  --c-amber: #9a7c2e;
-  --c-amber2: #b8943a;
-  --c-red: #9a2e2e;
-  --c-red2: #cc3636;
-  --c-green: #2a7a38;
-  --c-green2: #35a048;
+  --c-bg: #141412;
+  --c-panel: #20201c;
+  --c-panel2: #282824;
+  --c-text: #eee9d8;
+  --c-muted: #888376;
+  --c-muted2: #605d54;
+  --c-paper: #f7f3e8;
+  --c-paper2: #e4ddcc;
+  --c-border: #32322c;
+  --c-border2: #44433c;
+  --c-amber: #d4aa44;
+  --c-amber2: #edd864;
+  --c-red: #aa3232;
+  --c-red2: #dc3e3e;
+  --c-green: #2e8b3e;
+  --c-green2: #42ca5e;
   --f-mono: 'Courier Prime', 'Courier New', monospace;
   --f-admin: 'Barlow Condensed', 'Arial Narrow', sans-serif;
 }

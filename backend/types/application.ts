@@ -18,6 +18,7 @@ export type ApplicationStatus =
  */
 export interface ApologyData {
   recipient: string;
+  recipientPhone?: string;
   incident: string;
   whatHappened: string;
   responsibility: string;

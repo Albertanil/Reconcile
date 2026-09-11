@@ -131,6 +131,7 @@ export class ApplicationStateManager {
 
     const existingApology = app.apology || {
       recipient: '',
+      recipientPhone: '',
       incident: '',
       whatHappened: '',
       responsibility: '',
@@ -141,6 +142,7 @@ export class ApplicationStateManager {
 
     const updatedApology: ApologyData = {
       recipient: payload.recipient !== undefined ? payload.recipient : existingApology.recipient,
+      recipientPhone: payload.recipientPhone !== undefined ? payload.recipientPhone : existingApology.recipientPhone,
       incident: payload.incident !== undefined ? payload.incident : existingApology.incident,
       whatHappened: payload.whatHappened !== undefined ? payload.whatHappened : existingApology.whatHappened,
       responsibility: payload.responsibility !== undefined ? payload.responsibility : existingApology.responsibility,
@@ -207,6 +209,7 @@ export class ApplicationStateManager {
     // Trim all fields for clean submission state
     const trimmedApology: ApologyData = {
       recipient: apology.recipient.trim(),
+      recipientPhone: apology.recipientPhone ? apology.recipientPhone.trim() : '',
       incident: apology.incident.trim(),
       whatHappened: apology.whatHappened.trim(),
       responsibility: apology.responsibility.trim(),

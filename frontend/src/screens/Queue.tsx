@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import PageChrome from '../components/PageChrome'
 import type { Navigate } from '../App'
+import { useApplication } from '@/context/ApplicationContext'
 
 export default function Queue({ navigate }: { navigate: Navigate }) {
+  const { ticketNumber } = useApplication()
   const [serving, setServing] = useState('A-044')
   const [dots, setDots] = useState('')
 
@@ -34,7 +36,7 @@ export default function Queue({ navigate }: { navigate: Navigate }) {
         >
           <div className="flex items-center gap-5" style={{ color: 'var(--c-muted)' }}>
             <span>
-              YOUR NUMBER: <strong style={{ color: 'var(--c-text)', fontSize: '13px' }}>A-047</strong>
+              YOUR NUMBER: <strong style={{ color: 'var(--c-text)', fontSize: '13px' }}>{ticketNumber}</strong>
             </span>
             <span style={{ color: 'var(--c-border2)' }}>|</span>
             <span>
@@ -55,7 +57,7 @@ export default function Queue({ navigate }: { navigate: Navigate }) {
 
         {/* Main 3D room — takes most of the space */}
         <div className="flex-1 relative overflow-hidden" style={{ minHeight: '420px' }}>
-          <WaitingRoom3D serving={serving} />
+          <WaitingRoom3D serving={serving} ticketNumber={ticketNumber} />
           {/* Scanline overlay */}
           <div
             className="absolute inset-0 pointer-events-none"
@@ -130,7 +132,7 @@ export default function Queue({ navigate }: { navigate: Navigate }) {
   )
 }
 
-function WaitingRoom3D({ serving }: { serving: string }) {
+function WaitingRoom3D({ serving, ticketNumber }: { serving: string; ticketNumber?: string }) {
   const upNext = ['A-045', 'A-046', 'A-047', 'A-048'].filter((n) => n !== serving)
 
   return (
@@ -241,8 +243,8 @@ function WaitingRoom3D({ serving }: { serving: string }) {
       <rect x="422" y="339" width="24" height="4" fill="#ddd7c0" />
       {/* Perforation line on ticket */}
       <line x1="418" y1="353" x2="450" y2="353" stroke="#ccc6b0" strokeWidth="0.5" strokeDasharray="2,2" />
-      {/* A-047 on ticket */}
-      <text x="434" y="380" textAnchor="middle" style={{ fontFamily: 'Courier Prime, monospace', fontSize: '13px', fill: '#1a1610', fontWeight: 700, letterSpacing: '1px' }}>A-047</text>
+      {/* Ticket number on kiosk */}
+      <text x="434" y="380" textAnchor="middle" style={{ fontFamily: 'Courier Prime, monospace', fontSize: '13px', fill: '#1a1610', fontWeight: 700, letterSpacing: '1px' }}>{ticketNumber || 'A-001'}</text>
       {/* Base of kiosk */}
       <rect x="388" y="446" width="84" height="12" fill="#1e1c18" />
       <rect x="392" y="455" width="76" height="8" fill="#181614" />

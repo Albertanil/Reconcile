@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import PageChrome from '../components/PageChrome'
 import type { Navigate } from '../App'
+import { useApplication } from '@/context/ApplicationContext'
 
 const MIN_WORDS = 500
 
@@ -18,9 +19,9 @@ function getWordWarn(wc: number): { text: string; type: 'warn' | 'ok' | 'info' }
 }
 
 export default function Submission({ navigate }: { navigate: Navigate }) {
-  const [apology, setApology] = useState(
-    'I am truly sorry for what I did. I recognize that my actions caused inconvenience and hurt. I should have been more thoughtful and responsible. I understand that trust...',
-  )
+  const { draftApology, submitApology, loading, error } = useApplication()
+
+  const [apology, setApology] = useState(draftApology.statement || '')
   const [submitted, setSubmitted] = useState(false)
   const [btnPos, setBtnPos] = useState({ x: 0, y: 0 })
   const [avoidCount, setAvoidCount] = useState(0)
@@ -69,9 +70,19 @@ export default function Submission({ navigate }: { navigate: Navigate }) {
     }
   }, [])
 
-  function handleSubmit() {
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  const handleSubmit = async () => {
+    if (submitted || loading) return
     setSubmitted(true)
-    setTimeout(() => navigate('clerk'), 1600)
+    setSubmitError(null)
+    try {
+      await submitApology(apology)
+      navigate('clerk')
+    } catch (err: any) {
+      setSubmitted(false)
+      setSubmitError(err.message || 'Submission failed. Please try again.')
+    }
   }
 
   return (
@@ -171,6 +182,21 @@ export default function Submission({ navigate }: { navigate: Navigate }) {
             </div>
           )}
 
+          {/* Submission error message */}
+          {(submitError || error) && (
+            <div
+              className="p-3 border mb-4 text-xs slide-in"
+              style={{
+                borderColor: 'var(--c-red2)',
+                background: 'rgba(204,54,54,0.08)',
+                fontFamily: 'var(--f-mono)',
+                color: '#cc3636',
+              }}
+            >
+              ⚠ SUBMISSION ERROR: {submitError || error}
+            </div>
+          )}
+
           {/* Submit button area */}
           <div className="flex flex-col items-start mt-6">
             {/* Dashed approach indicator */}
@@ -186,20 +212,21 @@ export default function Submission({ navigate }: { navigate: Navigate }) {
               <button
                 ref={btnRef}
                 onClick={handleSubmit}
-                disabled={submitted}
+                disabled={submitted || loading}
                 className="px-10 py-3 text-sm tracking-[0.2em] border transition-all"
                 style={{
                   fontFamily: 'var(--f-mono)',
-                  background: submitted ? '#3a3830' : '#1a1610',
-                  color: submitted ? '#7a7060' : '#ddd8c4',
+                  background: (submitted || loading) ? '#3a3830' : '#1a1610',
+                  color: (submitted || loading) ? '#7a7060' : '#ddd8c4',
                   borderColor: '#1a1610',
-                  cursor: submitted ? 'default' : 'pointer',
+                  cursor: (submitted || loading) ? 'wait' : 'pointer',
                   letterSpacing: '0.2em',
                   transform: `translate(${btnPos.x}px, ${btnPos.y}px)`,
                   transition: 'transform 0.3s ease',
+                  opacity: (submitted || loading) ? 0.7 : 1,
                 }}
               >
-                {submitted ? 'SUBMITTING...' : 'SUBMIT APPLICATION'}
+                {submitted || loading ? 'SUBMITTING...' : 'SUBMIT APPLICATION'}
               </button>
             </div>
             <div

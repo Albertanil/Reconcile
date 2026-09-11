@@ -1,21 +1,29 @@
 import { useState, useEffect } from 'react'
 import PageChrome from '../components/PageChrome'
 import type { Navigate } from '../App'
+import { useApplication } from '@/context/ApplicationContext'
 
-const CATEGORIES = [
-  { label: 'RESPONSIBILITY', target: 94, color: 'var(--c-green2)' },
-  { label: 'IMPACT ACKNOWLEDGMENT', target: 91, color: 'var(--c-green2)' },
-  { label: 'REGRET INDICATORS', target: 88, color: 'var(--c-green2)' },
-  { label: 'FUTURE PREVENTION', target: 86, color: 'var(--c-green2)' },
-  { label: 'DEFLECTION INDEX', target: 4, color: 'var(--c-red2)', invert: true },
-]
-
-const TARGET_SCORE = 90
 const THRESHOLD = 70
 
 export default function Evaluation({ navigate }: { navigate: Navigate }) {
+  const { application, ticketNumber } = useApplication()
+  const evaluationResult = application?.evaluation
+  const status = application?.status
+  const rejectionReason = application?.evaluation?.summary
+
+  const isRejected = status === 'REJECTED' || (evaluationResult && evaluationResult.remorseScore < THRESHOLD)
+  const targetScore = evaluationResult?.remorseScore ?? (isRejected ? 42 : 90)
+
+  const categories = [
+    { label: 'RESPONSIBILITY', target: evaluationResult?.responsibility === 'HIGH' ? 94 : evaluationResult?.responsibility === 'MEDIUM' ? 65 : (isRejected ? 35 : 94), color: 'var(--c-green2)' },
+    { label: 'IMPACT ACKNOWLEDGMENT', target: evaluationResult?.impactAcknowledgment === 'HIGH' ? 91 : evaluationResult?.impactAcknowledgment === 'MEDIUM' ? 60 : (isRejected ? 40 : 91), color: 'var(--c-green2)' },
+    { label: 'REGRET INDICATORS', target: evaluationResult?.regretIndicators === 'HIGH' ? 88 : evaluationResult?.regretIndicators === 'MEDIUM' ? 60 : (isRejected ? 45 : 88), color: 'var(--c-green2)' },
+    { label: 'FUTURE PREVENTION', target: evaluationResult?.remorseScore ? Math.min(100, Math.max(10, evaluationResult.remorseScore - 5)) : (isRejected ? 30 : 86), color: 'var(--c-green2)' },
+    { label: 'DEFLECTION INDEX', target: evaluationResult?.deflection === 'HIGH' ? 78 : evaluationResult?.deflection === 'MEDIUM' ? 45 : (isRejected ? 78 : 4), color: 'var(--c-red2)', invert: true },
+  ]
+
   const [score, setScore] = useState(0)
-  const [bars, setBars] = useState(CATEGORIES.map(() => 0))
+  const [bars, setBars] = useState(categories.map(() => 0))
   const [stampVisible, setStampVisible] = useState(false)
   const [phase, setPhase] = useState<'counting' | 'bars' | 'stamp' | 'done'>('counting')
 
@@ -23,9 +31,9 @@ export default function Evaluation({ navigate }: { navigate: Navigate }) {
     // Phase 1: count up main score
     let current = 0
     const step = () => {
-      current += Math.ceil((TARGET_SCORE - current) * 0.12) || 1
-      if (current >= TARGET_SCORE) {
-        setScore(TARGET_SCORE)
+      current += Math.ceil((targetScore - current) * 0.12) || 1
+      if (current >= targetScore) {
+        setScore(targetScore)
         setPhase('bars')
       } else {
         setScore(current)
@@ -34,14 +42,14 @@ export default function Evaluation({ navigate }: { navigate: Navigate }) {
     }
     const t = setTimeout(() => requestAnimationFrame(step), 600)
     return () => clearTimeout(t)
-  }, [])
+  }, [targetScore])
 
   useEffect(() => {
     if (phase !== 'bars') return
     // Phase 2: animate bars one by one
     let i = 0
     const animateNext = () => {
-      if (i >= CATEGORIES.length) {
+      if (i >= categories.length) {
         setTimeout(() => {
           setStampVisible(true)
           setPhase('stamp')
@@ -50,7 +58,7 @@ export default function Evaluation({ navigate }: { navigate: Navigate }) {
       }
       const idx = i
       let val = 0
-      const target = CATEGORIES[idx].target
+      const target = categories[idx].target
       const step = () => {
         val += Math.ceil((target - val) * 0.15) || 1
         if (val >= target) {
@@ -93,7 +101,7 @@ export default function Evaluation({ navigate }: { navigate: Navigate }) {
               className="text-xs tracking-[0.3em] mb-2"
               style={{ fontFamily: 'var(--f-mono)', color: 'var(--c-muted)' }}
             >
-              CASE A-047 — BUREAU OF REMORSE ASSESSMENT
+              CASE {ticketNumber} — BUREAU OF REMORSE ASSESSMENT
             </div>
             <div
               className="text-3xl font-bold tracking-[0.12em]"
@@ -143,7 +151,7 @@ export default function Evaluation({ navigate }: { navigate: Navigate }) {
                 style={{
                   fontFamily: 'var(--f-admin)',
                   fontSize: '80px',
-                  color: score >= THRESHOLD ? 'var(--c-text)' : 'var(--c-red2)',
+                  color: !isRejected ? 'var(--c-text)' : 'var(--c-red2)',
                   letterSpacing: '-0.02em',
                 }}
               >
@@ -154,11 +162,11 @@ export default function Evaluation({ navigate }: { navigate: Navigate }) {
                 className="text-xs mt-2"
                 style={{
                   fontFamily: 'var(--f-mono)',
-                  color: score >= THRESHOLD ? 'var(--c-green2)' : 'var(--c-red2)',
+                  color: !isRejected ? 'var(--c-green2)' : 'var(--c-red2)',
                   letterSpacing: '0.2em',
                 }}
               >
-                {score >= THRESHOLD ? 'ABOVE THRESHOLD' : 'BELOW THRESHOLD'}
+                {!isRejected ? 'ABOVE THRESHOLD' : 'BELOW THRESHOLD'}
               </div>
               <div
                 className="absolute bottom-3 text-xs"
@@ -177,7 +185,7 @@ export default function Evaluation({ navigate }: { navigate: Navigate }) {
                 REMORSE BREAKDOWN — CATEGORY ANALYSIS
               </div>
               <div className="space-y-4">
-                {CATEGORIES.map((cat, i) => (
+                {categories.map((cat, i) => (
                   <div key={cat.label}>
                     <div
                       className="flex justify-between items-baseline mb-1.5"
@@ -226,13 +234,16 @@ export default function Evaluation({ navigate }: { navigate: Navigate }) {
             </div>
           </div>
 
-          {/* Approval stamp area */}
+          {/* Approval / Rejection stamp area */}
           {stampVisible && (
             <div
               className="border p-6 mb-6 flex items-center gap-6 stamp-appear"
-              style={{ background: 'var(--c-panel)', borderColor: 'var(--c-border)' }}
+              style={{
+                background: 'var(--c-panel)',
+                borderColor: isRejected ? 'var(--c-red2)' : 'var(--c-border)',
+              }}
             >
-              <ApprovalStamp />
+              <ApprovalStamp isRejected={isRejected} ticketNumber={ticketNumber} />
               <div>
                 <div
                   className="text-xs mb-1"
@@ -242,17 +253,20 @@ export default function Evaluation({ navigate }: { navigate: Navigate }) {
                 </div>
                 <div
                   className="text-3xl font-black tracking-[0.1em] mb-2"
-                  style={{ fontFamily: 'var(--f-admin)', color: 'var(--c-green2)' }}
+                  style={{
+                    fontFamily: 'var(--f-admin)',
+                    color: isRejected ? 'var(--c-red2)' : 'var(--c-green2)',
+                  }}
                 >
-                  STATUS: APPROVED ✓
+                  {isRejected ? 'STATUS: REJECTED ✗' : 'STATUS: APPROVED ✓'}
                 </div>
                 <div
                   className="text-xs"
                   style={{ fontFamily: 'var(--f-mono)', color: 'var(--c-muted)', lineHeight: '1.6' }}
                 >
-                  CASE A-047 remorse score ({TARGET_SCORE}%) meets or exceeds the required threshold
-                  ({THRESHOLD}%). This apology is hereby authorized for dispatch. Certificate valid for 30
-                  days.
+                  {isRejected
+                    ? (rejectionReason || `CASE ${ticketNumber} remorse score (${score}%) failed to meet minimum threshold (${THRESHOLD}%). High deflection index detected. Application is denied. Re-application permitted after 14 business days.`)
+                    : `CASE ${ticketNumber} remorse score (${score}%) meets or exceeds the required threshold (${THRESHOLD}%). This apology is hereby authorized for dispatch. Certificate valid for 30 days.`}
                 </div>
               </div>
             </div>
@@ -265,29 +279,21 @@ export default function Evaluation({ navigate }: { navigate: Navigate }) {
                 className="text-xs"
                 style={{ fontFamily: 'var(--f-mono)', color: 'var(--c-muted2)' }}
               >
-                CASE A-047 — EVALUATION COMPLETE — REF: DIA/7B/A047/EVL
+                CASE {ticketNumber} — EVALUATION COMPLETE — REF: DIA/7B/{ticketNumber}/EVL
               </div>
               <button
                 onClick={() => navigate('approval')}
                 className="px-10 py-3 text-xs tracking-[0.2em] border transition-all"
                 style={{
                   fontFamily: 'var(--f-mono)',
-                  background: 'var(--c-text)',
+                  background: isRejected ? 'var(--c-red2)' : 'var(--c-text)',
                   color: 'var(--c-bg)',
-                  borderColor: 'var(--c-text)',
+                  borderColor: isRejected ? 'var(--c-red2)' : 'var(--c-text)',
                   cursor: 'pointer',
                   letterSpacing: '0.2em',
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'transparent'
-                  e.currentTarget.style.color = 'var(--c-text)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'var(--c-text)'
-                  e.currentTarget.style.color = 'var(--c-bg)'
-                }}
               >
-                PROCEED TO APPROVAL →
+                {isRejected ? 'VIEW REJECTION NOTICE →' : 'PROCEED TO APPROVAL →'}
               </button>
             </div>
           )}
@@ -345,7 +351,10 @@ export default function Evaluation({ navigate }: { navigate: Navigate }) {
   )
 }
 
-function ApprovalStamp() {
+function ApprovalStamp({ isRejected, ticketNumber }: { isRejected?: boolean; ticketNumber?: string }) {
+  const color = isRejected ? 'var(--c-red2)' : 'var(--c-green2)'
+  const text = isRejected ? 'REJECTED' : 'APPROVED'
+
   return (
     <svg width="90" height="90" viewBox="0 0 90 90" style={{ flexShrink: 0 }}>
       <rect
@@ -354,7 +363,7 @@ function ApprovalStamp() {
         width="86"
         height="86"
         fill="none"
-        stroke="var(--c-green2)"
+        stroke={color}
         strokeWidth="2"
       />
       <rect
@@ -363,7 +372,7 @@ function ApprovalStamp() {
         width="78"
         height="78"
         fill="none"
-        stroke="var(--c-green2)"
+        stroke={color}
         strokeWidth="0.5"
         opacity="0.5"
       />
@@ -371,7 +380,7 @@ function ApprovalStamp() {
         x="45"
         y="32"
         textAnchor="middle"
-        style={{ fontFamily: 'var(--f-admin)', fontSize: '9px', fill: 'var(--c-green2)', letterSpacing: '2px' }}
+        style={{ fontFamily: 'var(--f-admin)', fontSize: '9px', fill: color, letterSpacing: '2px' }}
       >
         D.I.A.
       </text>
@@ -379,23 +388,23 @@ function ApprovalStamp() {
         x="45"
         y="52"
         textAnchor="middle"
-        style={{ fontFamily: 'var(--f-admin)', fontSize: '18px', fill: 'var(--c-green2)', fontWeight: 800, letterSpacing: '1px' }}
+        style={{ fontFamily: 'var(--f-admin)', fontSize: isRejected ? '14px' : '18px', fill: color, fontWeight: 800, letterSpacing: '1px' }}
       >
-        APPROVED
+        {text}
       </text>
       <text
         x="45"
         y="66"
         textAnchor="middle"
-        style={{ fontFamily: 'var(--f-mono)', fontSize: '7px', fill: 'var(--c-green2)', letterSpacing: '1px' }}
+        style={{ fontFamily: 'var(--f-mono)', fontSize: '7px', fill: color, letterSpacing: '1px' }}
       >
-        CASE A-047
+        CASE {ticketNumber || 'A-047'}
       </text>
       <text
         x="45"
         y="77"
         textAnchor="middle"
-        style={{ fontFamily: 'var(--f-mono)', fontSize: '6px', fill: 'var(--c-green2)', opacity: 0.7, letterSpacing: '0.5px' }}
+        style={{ fontFamily: 'var(--f-mono)', fontSize: '6px', fill: color, opacity: 0.7, letterSpacing: '0.5px' }}
       >
         FORM 7-B REV.14
       </text>
