@@ -242,8 +242,11 @@ Landing ──> Get Queue No. ──> Waiting Room ──> Apology Form ──> 
 ## Project Demo
 
 ### Video
-[TODO: Add demo video link here]
-*Explanation of demo video*
+
+https://github.com/user-attachments/assets/8b8e7669-7fce-4d2c-b689-d330700472e3
+
+
+*A short demonstration of **RECONCILE**, showcasing the apology submission, AI clerk interrogation, remorse analysis, and final approval/rejection workflow.*
 
 
 ### Live Deployment
