@@ -14,6 +14,24 @@ export type ApplicationStatus =
   | 'APOLOGY_SENT';
 
 /**
+ * Core Apology Form Data structure.
+ */
+export interface ApologyData {
+  recipient: string;
+  incident: string;
+  whatHappened: string;
+  responsibility: string;
+  impact: string;
+  regret: string;
+  prevention: string;
+}
+
+/**
+ * Partial Apology Form Data for saving in-progress form drafts.
+ */
+export type UpdateApologyDataPayload = Partial<ApologyData>;
+
+/**
  * Details of the apology recipient.
  */
 export interface RecipientInfo {
@@ -32,6 +50,8 @@ export interface ApplicationAnswers {
   [key: string]: unknown;
 }
 
+import { EvaluationResult } from './evaluation';
+
 /**
  * Core Application State interface for tracking apology applications.
  */
@@ -43,6 +63,8 @@ export interface ApplicationState {
   answers?: ApplicationAnswers;
   apologyText?: string;
   recipient?: RecipientInfo;
+  apology?: ApologyData;
+  evaluation?: EvaluationResult;
   createdAt: string;
   updatedAt: string;
 }
@@ -73,19 +95,31 @@ export interface GetApplicationResponse {
 }
 
 /**
- * Request payload for PATCH /api/application (Update Application Status)
+ * Request payload for PATCH /api/application (Update Status, Save Apology, or Submit)
  */
-export interface UpdateApplicationStatusRequest {
+export interface UpdateApplicationRequest {
   id?: string;
   ticketNumber?: string;
-  status: ApplicationStatus;
+  action?: 'status' | 'update' | 'submit';
+  status?: ApplicationStatus;
+  apology?: UpdateApologyDataPayload;
 }
+
+/**
+ * Alias for backward compatibility
+ */
+export type UpdateApplicationStatusRequest = UpdateApplicationRequest;
 
 /**
  * Response structure for PATCH /api/application
  */
-export interface UpdateApplicationStatusResponse {
+export interface UpdateApplicationResponse {
   success: boolean;
   application?: ApplicationState;
   error?: string;
 }
+
+/**
+ * Alias for backward compatibility
+ */
+export type UpdateApplicationStatusResponse = UpdateApplicationResponse;

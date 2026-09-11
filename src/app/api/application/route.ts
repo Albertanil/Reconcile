@@ -5,8 +5,8 @@ import {
   CreateApplicationRequest,
   CreateApplicationResponse,
   GetApplicationResponse,
-  UpdateApplicationStatusRequest,
-  UpdateApplicationStatusResponse,
+  UpdateApplicationRequest,
+  UpdateApplicationResponse,
 } from '@backend/types/application';
 
 /**
@@ -97,13 +97,13 @@ export async function GET(request: NextRequest): Promise<NextResponse<GetApplica
 
 /**
  * PATCH /api/application
- * Thin HTTP adapter for updating application status subject to state transition validation.
+ * Thin HTTP adapter for application status updates, apology data updates, and submission.
  */
 export async function PATCH(
   request: NextRequest
-): Promise<NextResponse<UpdateApplicationStatusResponse>> {
+): Promise<NextResponse<UpdateApplicationResponse>> {
   try {
-    let body: UpdateApplicationStatusRequest;
+    let body: UpdateApplicationRequest;
 
     try {
       body = await request.json();
@@ -117,7 +117,7 @@ export async function PATCH(
       );
     }
 
-    const { id, ticketNumber, status } = body;
+    const { id, ticketNumber, action, status, apology } = body;
 
     if (!id && !ticketNumber) {
       return NextResponse.json(
@@ -129,32 +129,73 @@ export async function PATCH(
       );
     }
 
-    if (!status) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Please provide a target "status" in the request body.',
-        },
-        { status: 400 }
-      );
+    const idOrTicket = { id, ticketNumber };
+
+    // Action 1: Save/Update Apology Form Data
+    if (action === 'update' || apology !== undefined) {
+      if (!apology) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Please provide "apology" data to update.',
+          },
+          { status: 400 }
+        );
+      }
+
+      const updatedApp = applicationService.updateApologyData(idOrTicket, apology);
+      return NextResponse.json({
+        success: true,
+        application: updatedApp,
+      });
     }
 
-    const updatedApplication = applicationService.updateApplicationStatus({ id, ticketNumber }, status);
-
-    if (!updatedApplication) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Application not found.',
-        },
-        { status: 404 }
-      );
+    // Action 2: Submit Apology Application
+    if (action === 'submit') {
+      const submittedApp = applicationService.submitApology(idOrTicket);
+      return NextResponse.json({
+        success: true,
+        application: submittedApp,
+      });
     }
 
-    return NextResponse.json({
-      success: true,
-      application: updatedApplication,
-    });
+    // Action 3: Status Transition (default if status is provided)
+    if (status || action === 'status') {
+      if (!status) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Please provide a target "status" in the request body.',
+          },
+          { status: 400 }
+        );
+      }
+
+      const updatedApplication = applicationService.updateApplicationStatus(idOrTicket, status);
+
+      if (!updatedApplication) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Application not found.',
+          },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        application: updatedApplication,
+      });
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Invalid action or request payload. Provide "status", "apology", or action="submit".',
+      },
+      { status: 400 }
+    );
   } catch (error) {
     if (error instanceof InvalidStatusTransitionError) {
       return NextResponse.json(
@@ -167,12 +208,14 @@ export async function PATCH(
     }
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown server error';
+    const isNotFoundError = errorMessage.includes('not found');
+    
     return NextResponse.json(
       {
         success: false,
-        error: `Failed to update application status: ${errorMessage}`,
+        error: errorMessage,
       },
-      { status: 500 }
+      { status: isNotFoundError ? 404 : 400 }
     );
   }
 }
