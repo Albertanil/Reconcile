@@ -206,9 +206,31 @@ We prioritize a complete, polished, and hilarious interaction over unnecessary b
 
 ## Project Documentation
 
-### Screenshots (TODO)
-![Screenshot1]
+### Screenshots 
 
+#### 1. Apology Application
+
+<img width="1917" height="970" alt="image" src="https://github.com/user-attachments/assets/00bfeabb-a4a0-43c2-bbc0-58ca57c68b5b" />
+
+*Figure 1 — The applicant submits the incident details, accepts responsibility, acknowledges the impact, and provides a statement of genuine remorse.*
+
+---
+
+#### 2. AI Clerk Evaluation
+
+<img width="1917" height="971" alt="image" src="https://github.com/user-attachments/assets/cea8b134-454d-4cfb-badf-0e33323eaa07" />
+
+*Figure 2 — The AI Clerk evaluates the submitted apology and produces an AI-estimated remorse score.*
+
+---
+
+#### 3. Apology Verification Rejected
+
+<img width="1913" height="960" alt="image" src="https://github.com/user-attachments/assets/e2c22ffb-6e5c-4a51-88f3-125fa531eb75" />
+
+*Figure 3 — The application is denied when the AI-estimated remorse score falls below the department's approval threshold.*
+
+---
 ### Diagrams
 ```text
 Landing ──> Get Queue No. ──> Waiting Room ──> Apology Form ──> Submit ──> AI Clerk ──> Remorse Evaluation ──> Dispatch Authorization ──> Simulated Recipient Notification
@@ -223,8 +245,9 @@ Landing ──> Get Queue No. ──> Waiting Room ──> Apology Form ──> 
 [TODO: Add demo video link here]
 *Explanation of demo video*
 
-### Additional Demos
-[TODO: Add any extra demo materials/links]
+
+### Live Deployment
+**[🚀 Launch Reconcile — Live Demo](https://reconcile1.vercel.app/)**
 
 ---
 
