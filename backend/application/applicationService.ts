@@ -1,5 +1,5 @@
 import { stateManager } from './stateManager';
-import { ApplicationState } from '@backend/types/application';
+import { ApplicationState, ApplicationStatus } from '@backend/types/application';
 
 /**
  * Service handling high-level application operations.
@@ -24,5 +24,24 @@ export const applicationService = {
    */
   getApplicationByTicketNumber(ticketNumber: string): ApplicationState | undefined {
     return stateManager.getApplicationByTicketNumber(ticketNumber);
+  },
+
+  /**
+   * Update the status of an application by ID or Ticket Number.
+   * Validates transition via the state machine rules.
+   */
+  updateApplicationStatus(
+    idOrTicket: { id?: string; ticketNumber?: string },
+    newStatus: ApplicationStatus
+  ): ApplicationState | undefined {
+    const app = idOrTicket.id
+      ? stateManager.getApplicationById(idOrTicket.id)
+      : idOrTicket.ticketNumber
+      ? stateManager.getApplicationByTicketNumber(idOrTicket.ticketNumber)
+      : undefined;
+
+    if (!app) return undefined;
+
+    return stateManager.updateStatus(app.id, newStatus);
   },
 };

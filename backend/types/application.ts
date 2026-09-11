@@ -3,15 +3,15 @@
  */
 export type ApplicationStatus =
   | 'APPLICATION_STARTED'
-  | 'APPLICATION_SUBMITTED'
-  | 'CLERK_INTERVIEW'
+  | 'WAITING'
+  | 'FORM_IN_PROGRESS'
+  | 'FORM_SUBMITTED'
+  | 'AI_INTERROGATION'
   | 'EVALUATION'
-  | 'REJECTED'
   | 'APPROVED'
+  | 'REJECTED'
   | 'APPEAL'
-  | 'AUTHORIZED'
-  | 'DISPATCH'
-  | 'COMPLETE';
+  | 'APOLOGY_SENT';
 
 /**
  * Details of the apology recipient.
@@ -67,6 +67,24 @@ export interface CreateApplicationResponse {
  * Response structure for GET /api/application
  */
 export interface GetApplicationResponse {
+  success: boolean;
+  application?: ApplicationState;
+  error?: string;
+}
+
+/**
+ * Request payload for PATCH /api/application (Update Application Status)
+ */
+export interface UpdateApplicationStatusRequest {
+  id?: string;
+  ticketNumber?: string;
+  status: ApplicationStatus;
+}
+
+/**
+ * Response structure for PATCH /api/application
+ */
+export interface UpdateApplicationStatusResponse {
   success: boolean;
   application?: ApplicationState;
   error?: string;

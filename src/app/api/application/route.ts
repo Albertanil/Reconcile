@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { applicationService } from '@backend/application/applicationService';
+import { InvalidStatusTransitionError } from '@backend/application/stateMachine';
 import {
   CreateApplicationRequest,
   CreateApplicationResponse,
   GetApplicationResponse,
+  UpdateApplicationStatusRequest,
+  UpdateApplicationStatusResponse,
 } from '@backend/types/application';
 
 /**
@@ -86,6 +89,88 @@ export async function GET(request: NextRequest): Promise<NextResponse<GetApplica
       {
         success: false,
         error: `Failed to fetch application: ${errorMessage}`,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * PATCH /api/application
+ * Thin HTTP adapter for updating application status subject to state transition validation.
+ */
+export async function PATCH(
+  request: NextRequest
+): Promise<NextResponse<UpdateApplicationStatusResponse>> {
+  try {
+    let body: UpdateApplicationStatusRequest;
+
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid JSON request payload.',
+        },
+        { status: 400 }
+      );
+    }
+
+    const { id, ticketNumber, status } = body;
+
+    if (!id && !ticketNumber) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Please provide either an "id" or "ticketNumber" in the request body.',
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!status) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Please provide a target "status" in the request body.',
+        },
+        { status: 400 }
+      );
+    }
+
+    const updatedApplication = applicationService.updateApplicationStatus({ id, ticketNumber }, status);
+
+    if (!updatedApplication) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Application not found.',
+        },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      application: updatedApplication,
+    });
+  } catch (error) {
+    if (error instanceof InvalidStatusTransitionError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: error.message,
+        },
+        { status: 400 }
+      );
+    }
+
+    const errorMessage = error instanceof Error ? error.message : 'Unknown server error';
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Failed to update application status: ${errorMessage}`,
       },
       { status: 500 }
     );

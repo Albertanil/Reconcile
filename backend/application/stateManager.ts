@@ -1,5 +1,6 @@
 import { ApplicationState, ApplicationStatus } from '@backend/types/application';
 import { generateNextTicketNumber } from './ticketGenerator';
+import { validateTransition } from './stateMachine';
 
 /**
  * In-Memory Application Store.
@@ -53,13 +54,18 @@ export class ApplicationStateManager {
   }
 
   /**
-   * Updates an application's status and timestamp.
+   * Updates an application's status after validating state machine transition rules.
+   * Throws InvalidStatusTransitionError if the transition is illegal.
+   * 
    * @param id - Application ID
-   * @param status - New status
+   * @param status - Target status
    */
   public updateStatus(id: string, status: ApplicationStatus): ApplicationState | undefined {
     const app = this.applications.get(id);
     if (!app) return undefined;
+
+    // Enforce state transition rules
+    validateTransition(app.status, status);
 
     const updatedApp: ApplicationState = {
       ...app,
