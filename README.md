@@ -11,7 +11,7 @@
 ### Team Members
 - Team Lead: Alan Riju
 - Member 2: Albert Anil
-- Member 3: [TODO: Add Member Name]
+
 
 ### Project Description
 Reconcile is a deliberately ridiculous bureaucratic system that determines whether a person is sufficiently sorry before allowing them to send an apology. 
@@ -112,14 +112,7 @@ npm run dev
 ## Project Documentation
 
 ### Screenshots (TODO)
-![Screenshot1](https://via.placeholder.com/800x450?text=Bureaucratic+Waiting+Room+Placeholder)
-*TODO: Add screenshot of Bureaucratic Waiting Room UI*
-
-![Screenshot2](https://via.placeholder.com/800x450?text=Apology+Form+Placeholder)
-*TODO: Add screenshot of Apology Application Form*
-
-![Screenshot3](https://via.placeholder.com/800x450?text=AI+Clerk+Interrogation+Placeholder)
-*TODO: Add screenshot of AI Clerk Interrogation & Remorse Evaluation Result*
+![Screenshot1]
 
 ### Diagrams
 ```text
